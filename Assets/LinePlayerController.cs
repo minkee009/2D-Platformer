@@ -17,10 +17,13 @@ public class LinePlayerController : MonoBehaviour, ILineMoveObj
     public float airDrag = 0.05f;
     public float accel = 0.65f;
     public float accel_air = 0.015f;
+    public int max_additional_airjump_count = 3;
 
     public bool isGrounded;
 
     public BBox extend;
+
+    public Camera main;
 
     public LineGround DebugGround;
 
@@ -50,6 +53,12 @@ public class LinePlayerController : MonoBehaviour, ILineMoveObj
     private bool _forceUnground = false;
     private float _ungroundTime = 0.0f;
     private bool _editedFixedPos = false;
+
+    private bool _jumpInput = false;
+    private bool _jumpHoldInput = false;
+    private float _lastHInput = 0;
+    int _jumpCount = 0;
+
     private void Awake()
     {
         FixedInterpolator.CreateInstance();
@@ -104,16 +113,13 @@ public class LinePlayerController : MonoBehaviour, ILineMoveObj
         //}
     }
 
-    Camera main;
-
-    private bool _jumpInput = false;
-    private float _lastHInput = 0;
-
     private void Update()
     {
         _editedFixedPos = false;
         if (Input.GetKeyDown(KeyCode.LeftAlt) || (Gamepad.current?.buttonSouth.wasPressedThisFrame ?? false))
             _jumpInput = true;
+
+        _jumpHoldInput = Input.GetKey(KeyCode.LeftAlt);
 
         hInput = (Input.GetKey(KeyCode.RightArrow) ? 1f : 0f) + (Input.GetKey(KeyCode.LeftArrow) ? -1f : 0f);
         vInput = (Input.GetKey(KeyCode.UpArrow) ? 1f : 0f) + (Input.GetKey(KeyCode.DownArrow) ? -1f : 0f);
@@ -195,7 +201,7 @@ public class LinePlayerController : MonoBehaviour, ILineMoveObj
         Move();
 
         _lastHInput = hInput;
-
+        Debug.DrawRay(_internalPos, Velocity / Time.deltaTime, Color.magenta);
         if (!isGrounded && _velocity.y > 0.0f && !_lastMoveHitLine)
             return;
 
@@ -214,12 +220,8 @@ public class LinePlayerController : MonoBehaviour, ILineMoveObj
 
             //Debug.Log($"vel: +{projectVel.x}");
         }
-
-        Debug.DrawRay(_internalPos, Velocity / Time.deltaTime, Color.magenta);
     }
 
-    bool _dubbleJump = false;
-    int _jumpCount = 0;
 
     public void Move()
     {
@@ -233,21 +235,25 @@ public class LinePlayerController : MonoBehaviour, ILineMoveObj
         if (isGrounded && !_forceUnground)
         {
             _velocity.y = 0f;
-            _dubbleJump = false;
             _jumpCount = 0;
 
-            if (hInput == 0f)
-            {
-                //var velSign = Mathf.Sign(_velocity.x);
-                //var dir = _velocity.normalized;
-                _velocity = _velocity.normalized * (Mathf.Max(_velocity.magnitude - (drag * deltaTime),0.0f));
-            }
-            else if(hInput != 0f && MathF.Abs( _velocity.x) < speed || MathF.Sign(_velocity.x) != hInput)
+            float absX = MathF.Abs(_velocity.x);
+
+            if (hInput != 0f && absX < speed || MathF.Sign(_velocity.x) != hInput)
             {
                 _velocity += Vector2.right * hInput * accel * deltaTime;
                 //_velocity += Vector2.down * gravity * Time.deltaTime;
 
                 //_velocity.x = Mathf.Min(Mathf.Abs(_velocity.x), speed) * Mathf.Sign(_velocity.x);
+            }
+
+            if(absX > 0f)
+            {
+                if (hInput == 0f)
+                    _velocity = _velocity.normalized * (Mathf.Max(_velocity.magnitude - (drag * deltaTime), 0.0f));
+                else if (hInput != 0f && absX > speed)
+                    _velocity = _velocity.normalized * Mathf.Max(speed, _velocity.magnitude - (drag * deltaTime));
+
             }
 
             if(Mathf.Sign(_groundNormal.x) != hInput)
@@ -263,11 +269,22 @@ public class LinePlayerController : MonoBehaviour, ILineMoveObj
 
 
 
-            if (_jumpInput)
+            if (_jumpHoldInput)
             {
                 _jumpInput = false;
                 _velocity.y = 0f;
                 _velocity += Vector2.up * jumpforce;
+
+                if(hInput != 0)
+                {
+                    var projectPlaneNormal = new Vector2(_groundNormal.y, -_groundNormal.x);
+                    var gravitySlideForce = Vector2.Dot(Vector2.down * gravity * 3f, projectPlaneNormal);
+                    gravitySlideForce = (projectPlaneNormal * gravitySlideForce).x * deltaTime;
+
+
+                    _velocity.x = hInput * speed + gravitySlideForce;
+                }
+
                 //if (hInput != 0.0f && Mathf.Sign(_velocity.x) != Mathf.Sign(hInput))
                 //    _velocity.x = hInput * accel * Time.deltaTime;
                 MustUnground(0.05f);
@@ -288,12 +305,11 @@ public class LinePlayerController : MonoBehaviour, ILineMoveObj
 
 
 
-            if (_jumpCount < 3 && _jumpInput)
+            if (_jumpCount < max_additional_airjump_count && _jumpInput)
             {
                 var faceDir = spriteRender.flipX ? 1 : -1;
 
                 _jumpCount++;
-                _dubbleJump = true;
                 _jumpInput = false;
                 _velocity.y = 0f;
                 _velocity += Vector2.up * jumpforce * 0.8f;
