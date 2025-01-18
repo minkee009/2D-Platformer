@@ -1053,7 +1053,6 @@ MonoBehaviour:
   gravity: 0.4
   jumpforce: 0.15
   drag: 0.2
-  airDrag: 0.05
   accel: 0.35
   accel_air: 0.015
   max_additional_airjump_count: 1

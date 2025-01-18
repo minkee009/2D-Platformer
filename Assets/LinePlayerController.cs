@@ -14,7 +14,6 @@ public class LinePlayerController : MonoBehaviour, ILineMoveObj
     public float gravity = 5f;
     public float jumpforce = 10f;
     public float drag = 0.2f;
-    public float airDrag = 0.05f;
     public float accel = 0.65f;
     public float accel_air = 0.015f;
     public int max_additional_airjump_count = 3;
@@ -234,32 +233,31 @@ public class LinePlayerController : MonoBehaviour, ILineMoveObj
 
         if (isGrounded && !_forceUnground)
         {
-            _velocity.y = 0f;
+            var crossNormal = new Vector2(-_groundNormal.y, _groundNormal.x);
+            _velocity = Mathf.Sign(Vector2.Dot(_velocity, crossNormal)) * crossNormal * _velocity.magnitude;
             _jumpCount = 0;
 
-            float absX = MathF.Abs(_velocity.x);
-
-            if (hInput != 0f && absX < speed || MathF.Sign(_velocity.x) != hInput)
+            if (hInput != 0f && _velocity.magnitude < speed || MathF.Sign(_velocity.x) != hInput)
             {
-                _velocity += Vector2.right * hInput * accel * deltaTime;
+                var currentDir = MathF.Sign(Vector2.Dot(crossNormal, Vector2.right * hInput)) * crossNormal;
+
+                _velocity += currentDir * accel * deltaTime;
                 //_velocity += Vector2.down * gravity * Time.deltaTime;
 
                 //_velocity.x = Mathf.Min(Mathf.Abs(_velocity.x), speed) * Mathf.Sign(_velocity.x);
             }
 
-            if(absX > 0f)
+            if(_velocity.sqrMagnitude > 0f)
             {
                 if (hInput == 0f)
                     _velocity = _velocity.normalized * (Mathf.Max(_velocity.magnitude - (drag * deltaTime), 0.0f));
-                else if (hInput != 0f && absX > speed)
+                else if (hInput != 0f && _velocity.magnitude > speed)
                     _velocity = _velocity.normalized * Mathf.Max(speed, _velocity.magnitude - (drag * deltaTime));
 
             }
 
-            if(Mathf.Sign(_groundNormal.x) != hInput)
+            if(Vector2.Dot(_groundNormal,Vector2.up) > 0.89f)
             {
-                var crossNormal = new Vector2(-_groundNormal.y, _groundNormal.x).normalized;
-                _velocity = (Vector2.Dot(_velocity, crossNormal) * crossNormal).normalized * _velocity.magnitude;
 
             }
             //            _velocity = Vector2.ClampMagnitude(_velocity, speed);
@@ -278,7 +276,7 @@ public class LinePlayerController : MonoBehaviour, ILineMoveObj
                 if(hInput != 0)
                 {
                     var projectPlaneNormal = new Vector2(_groundNormal.y, -_groundNormal.x);
-                    var gravitySlideForce = Vector2.Dot(Vector2.down * gravity * 3f, projectPlaneNormal);
+                    var gravitySlideForce = Vector2.Dot(Vector2.down * gravity * 5f, projectPlaneNormal);
                     gravitySlideForce = (projectPlaneNormal * gravitySlideForce).x * deltaTime;
 
 
@@ -381,10 +379,19 @@ public class LinePlayerController : MonoBehaviour, ILineMoveObj
 
                 
                 initVelocity = Vector2.Dot(initVelocity, crossNormal) * crossNormal;
-                if (!hitGround && !isGrounded && hitInfo.normal.y > 0.7f)
+                if (!hitGround && !isGrounded && hitInfo.normal.y > 0.5f)
                 {
                     hitGround = true;
-                    initVelocity = initVelocity.normalized * (Mathf.Min(speed * 2f,initVelocity.magnitude));
+                    initVelocity = initVelocity.normalized * Mathf.Min(speed * 2f,initVelocity.magnitude * 0.65f);
+                    if (hInput != 0f && MathF.Sign(initVelocity.x) != hInput)
+                    {
+                        initVelocity = Vector2.zero;
+                        currentVel = Vector2.zero;
+                        isGrounded = true;
+                        ProbeGround();
+                    }
+
+                    //    initVelocity = crossNormal
                 }
 
                 hitAnyLine = true;
@@ -447,7 +454,7 @@ public class LinePlayerController : MonoBehaviour, ILineMoveObj
     public void ProbeGround()
     {
         bool checkState = isGrounded;
-        float checkDist = checkState ? 0.475f : 0.025f;
+        float checkDist = checkState ? 0.1f : 0.025f;
         float checkHeight = 0.025f;
         isGrounded = false;
         _groundNormal = Vector2.up;
