@@ -76,32 +76,32 @@ public class LineGround : MonoBehaviour
             _lineRenderer.enabled = ShowDebugGroundLine;
     }
 
-    //private void OnDrawGizmos()
-    //{
-    //    if(lines == null || lines.Count == 0)
-    //        return;
+    private void OnDrawGizmos()
+    {
+        if (lines == null || lines.Count == 0)
+            return;
 
-    //    if (ShowDebugGroundBox && lines.segment != null && lines.segment.Count > 0)
-    //    {
-    //        DrawBBox(extend);
+        if (ShowDebugGroundBox && lines.segment != null && lines.segment.Count > 0)
+        {
+            DrawBBox(extend);
 
-    //        foreach (var line in lines.segment)
-    //        {
-    //            var box = BBox.LineToBBox(line);
-    //            DrawBBox(box);
-    //        }
-    //    }
-        
+            foreach (var line in lines.segment)
+            {
+                var box = BBox.LineToBBox(line);
+                DrawBBox(box);
+            }
+        }
 
-    //    Gizmos.color = Color.red;
-    //    if (ShowDebugGroundLine && lines.Count > 0)
-    //    {
-    //        foreach (var line in lines.segment)
-    //        {
-    //            Gizmos.DrawLine(line.start, line.end);
-    //        }
-    //    }
-    //}
+
+        Gizmos.color = Color.red;
+        if (ShowDebugGroundLine && lines.Count > 0)
+        {
+            foreach (var line in lines.segment)
+            {
+                Gizmos.DrawLine(line.start, line.end);
+            }
+        }
+    }
 
     private void DrawBBox(BBox box)
     {

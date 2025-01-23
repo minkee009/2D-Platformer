@@ -32,6 +32,7 @@ public class LinePlayerController : MonoBehaviour, ILineMoveObj
 
     private Vector2 _internalPos;
     private Vector2 _lastFixedPos;
+    private Vector2 _lastInternalPos;
 
     private bool _lastMoveHitLine;
 
@@ -48,6 +49,7 @@ public class LinePlayerController : MonoBehaviour, ILineMoveObj
     const int MAX_SEARCHCOUNT = 8;
     const float SWEEPTEST_OFFSET = 0.0002f;
     const float COLLISION_OFFSET = 0.0004f;
+    const float LEDGE_CHECK_OFFSET = 0.001f;
 
     private bool _forceUnground = false;
     private float _ungroundTime = 0.0f;
@@ -70,6 +72,7 @@ public class LinePlayerController : MonoBehaviour, ILineMoveObj
     {
         initPos = ProjectPoint;
         _internalPos = ProjectPoint;
+        _lastInternalPos = ProjectPoint;
         //if (DebugGround != null)
         //    _debugGround = DebugGround.CreateGround();
 
@@ -224,6 +227,7 @@ public class LinePlayerController : MonoBehaviour, ILineMoveObj
 
     public void Move()
     {
+        _lastInternalPos = _internalPos;
         var deltaTime = Time.fixedDeltaTime;
 
         if(hInput != 0.0f && _lastHInput != hInput)
@@ -376,20 +380,20 @@ public class LinePlayerController : MonoBehaviour, ILineMoveObj
                 //Debug.DrawRay(hitInfo.hitPoint, crossNormal, Color.cyan, 0.5f);
 
                 currentVel = Vector2.Dot(currentVel, crossNormal) * crossNormal;
-
-                
                 initVelocity = Vector2.Dot(initVelocity, crossNormal) * crossNormal;
+
                 if (!hitGround && !isGrounded && hitInfo.normal.y > 0.5f)
                 {
                     hitGround = true;
-                    initVelocity = initVelocity.normalized * Mathf.Min(speed * 2f,initVelocity.magnitude * 0.65f);
+                    initVelocity = initVelocity.normalized * Mathf.Min(speed * 2f,initVelocity.magnitude);
                     if (hInput != 0f && MathF.Sign(initVelocity.x) != hInput)
                     {
                         initVelocity = Vector2.zero;
                         currentVel = Vector2.zero;
-                        isGrounded = true;
-                        ProbeGround();
+                        
                     }
+                    isGrounded = true;
+                    ProbeGround(false);
 
                     //    initVelocity = crossNormal
                 }
@@ -451,10 +455,11 @@ public class LinePlayerController : MonoBehaviour, ILineMoveObj
         _collisionLInes = collisionLines;
     }
 
-    public void ProbeGround()
+    public void ProbeGround(bool checkLedge = true)
     {
         bool checkState = isGrounded;
-        float checkDist = checkState ? 0.1f : 0.025f;
+
+        float checkDist = checkState ? 0.5f : 0.025f;
         float checkHeight = 0.025f;
         isGrounded = false;
         _groundNormal = Vector2.up;
@@ -466,8 +471,37 @@ public class LinePlayerController : MonoBehaviour, ILineMoveObj
             Debug.DrawRay(checkPos, Vector2.down * checkDist, Color.cyan);
             hit.distance = Mathf.Max(0.0f, hit.distance - COLLISION_OFFSET);
 
+            var probedPos = checkPos + Vector2.down * hit.distance;
+            if (checkLedge && _velocity.x != 0)
+            {
+                Vector2 dir = (_velocity.y > 0 ? Vector2.left : Vector2.right) * Mathf.Sign(probedPos.x - _lastInternalPos.x);
+                bool isHitWall = LineSweepTest((_velocity.y > 0 ? _lastInternalPos : probedPos) + (Mathf.Abs(_lastInternalPos.y - probedPos.y) * 0.5f * Vector2.up) + (dir * LEDGE_CHECK_OFFSET), -dir, Mathf.Abs(probedPos.x - _lastInternalPos.x) + LEDGE_CHECK_OFFSET, out CustomRayCastHit2D wallHit);
+                bool isLedge = hit.distance > 0.025f + LEDGE_CHECK_OFFSET && (!isHitWall || wallHit.normal.y <= 0) && (probedPos.y - _lastInternalPos.y < 0);
+
+                //if (isHitWall)
+                //    Debug.DrawRay(wallHit.hitPoint, wallHit.normal, Color.blue, 0.45f);
+
+                if (isLedge)
+                {
+                    if(_velocity.y > 0 
+                        && LineSweepTest(probedPos + (Mathf.Abs(_lastInternalPos.y - probedPos.y) * 0.5f * Vector2.up) + (-dir * LEDGE_CHECK_OFFSET), dir, Mathf.Abs(probedPos.x - _lastInternalPos.x) + LEDGE_CHECK_OFFSET, out wallHit)
+                        && wallHit.normal.y > 0f)
+                    {
+                        isGrounded = true;
+                        _internalPos = probedPos;
+                        _groundNormal = hit.normal;
+                        return;
+                    }
+
+                    //Debug.DrawRay(probedPos, hit.normal, Color.cyan, 0.45f);
+                    //Debug.DrawRay(_lastInternalPos, Vector2.up, Color.red, 0.45f);
+                    isGrounded = false;
+                    return;
+                }
+            }
+
             isGrounded = true;
-            _internalPos = checkPos + Vector2.down * hit.distance;
+            _internalPos = probedPos;
             _groundNormal = hit.normal;
         }
     }
@@ -525,8 +559,6 @@ public class LinePlayerController : MonoBehaviour, ILineMoveObj
         return validCount > 0 ? true : false;
     }
 
-
-
     public bool DebugMode;
 
     public bool SearchValidLines(BBox validArea, out int validCount)
@@ -534,10 +566,10 @@ public class LinePlayerController : MonoBehaviour, ILineMoveObj
         System.Array.Clear(_validLines, 0, MAX_SEARCHCOUNT);
 
         validCount = 0;
-        int debugIndex = -1;
+        int searchIndex = -1;
         foreach (Line line in _collisionLInes)
         {
-            debugIndex++;
+            searchIndex++;
             var lineBox = BBox.LineToBBox(line);
 
             if( lineBox.min.x <= validArea.max.x &&

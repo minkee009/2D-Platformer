@@ -12,36 +12,6 @@ public struct CustomRayCastHit2D
 
 public static class CustomPhysics
 {
-    public static bool Raycast2D(Vector2 position, Vector2 dir, float dist, Line line, out Vector2 intersection, out float t)
-    {
-        intersection = Vector2.zero;
-        Vector2 s = line.end - line.start;
-        t = Cross2D(line.start - position, s) / Cross2D(dir * dist, s);
-
-        if(t >= 0 && t <= 1) 
-        {
-            intersection = position + (dir * dist * t);
-            return true;
-        }
-
-        return false;
-    }
-
-    public static bool Raycast2D(Vector2 position, Vector2 dir, float dist, Line line, out Vector2 intersection)
-    {
-        intersection = Vector2.zero;
-        Vector2 s = line.end - line.start;
-        float t = Cross2D(line.start - position, s) / Cross2D(dir * dist, s);
-
-        if (t >= 0 && t <= 1)
-        {
-            intersection = position + (dir * dist * t);
-            return true;
-        }
-
-        return false;
-    }
-
     public static bool Raycast2D(Vector2 position, Vector2 dir, float dist, Line line, out CustomRayCastHit2D hitInfo)
     {
         hitInfo = new CustomRayCastHit2D();
