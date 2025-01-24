@@ -53,7 +53,6 @@ public class LinePlayerController : MonoBehaviour, ILineMoveObj
 
     private bool _forceUnground = false;
     private float _ungroundTime = 0.0f;
-    private bool _editedFixedPos = false;
 
     private bool _jumpInput = false;
     private bool _jumpHoldInput = false;
@@ -117,11 +116,11 @@ public class LinePlayerController : MonoBehaviour, ILineMoveObj
 
     private void Update()
     {
-        _editedFixedPos = false;
         if (Input.GetKeyDown(KeyCode.LeftAlt) || (Gamepad.current?.buttonSouth.wasPressedThisFrame ?? false))
             _jumpInput = true;
 
-        _jumpHoldInput = Input.GetKey(KeyCode.LeftAlt);
+
+        _jumpHoldInput = Input.GetKey(KeyCode.LeftAlt) || (Gamepad.current?.buttonSouth.isPressed ?? false);
 
         hInput = (Input.GetKey(KeyCode.RightArrow) ? 1f : 0f) + (Input.GetKey(KeyCode.LeftArrow) ? -1f : 0f);
         vInput = (Input.GetKey(KeyCode.UpArrow) ? 1f : 0f) + (Input.GetKey(KeyCode.DownArrow) ? -1f : 0f);
@@ -178,12 +177,7 @@ public class LinePlayerController : MonoBehaviour, ILineMoveObj
     // Update is called once per frame
     void FixedUpdate()
     {
-        
-        if (!_editedFixedPos)
-        {
-            _lastFixedPos = _internalPos;
-            _editedFixedPos = true;
-        }
+        _lastFixedPos = _internalPos;
 
         _ungroundTime = Mathf.Max(0.0f,_ungroundTime - Time.deltaTime);
 
@@ -257,11 +251,6 @@ public class LinePlayerController : MonoBehaviour, ILineMoveObj
                     _velocity = _velocity.normalized * (Mathf.Max(_velocity.magnitude - (drag * deltaTime), 0.0f));
                 else if (hInput != 0f && _velocity.magnitude > speed)
                     _velocity = _velocity.normalized * Mathf.Max(speed, _velocity.magnitude - (drag * deltaTime));
-
-            }
-
-            if(Vector2.Dot(_groundNormal,Vector2.up) > 0.89f)
-            {
 
             }
             //            _velocity = Vector2.ClampMagnitude(_velocity, speed);

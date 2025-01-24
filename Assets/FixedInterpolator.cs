@@ -51,6 +51,7 @@ public class FixedInterpolator : MonoBehaviour
         //_savedTimes[_checkIndex] = Time.fixedTime;
 
         _lastFixedTime = Time.time;
+        //Debug.Log($"[{Time.frameCount}] (i) fixed time = {Time.time} ");
     }
 
     //public int OldTimeIndex()
@@ -69,5 +70,6 @@ public class FixedInterpolator : MonoBehaviour
         //    _interpolationFactor = 1;
 
         _interpolationFactor = Mathf.Clamp01((Time.time - _lastFixedTime) / Time.fixedDeltaTime);
+        //Debug.Log($"[{Time.frameCount}] (o) update time = {Time.time} ");
     }
 }
