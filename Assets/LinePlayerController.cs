@@ -240,8 +240,6 @@ public class LinePlayerController : MonoBehaviour, ILineMoveObj
                 var currentDir = MathF.Sign(Vector2.Dot(crossNormal, Vector2.right * hInput)) * crossNormal;
 
                 _velocity += currentDir * accel * deltaTime;
-                //_velocity += Vector2.down * gravity * Time.deltaTime;
-
                 //_velocity.x = Mathf.Min(Mathf.Abs(_velocity.x), speed) * Mathf.Sign(_velocity.x);
             }
 
@@ -302,7 +300,7 @@ public class LinePlayerController : MonoBehaviour, ILineMoveObj
 
                 _jumpCount++;
                 _jumpInput = false;
-                _velocity.y = 0f;
+                _velocity.y = Mathf.Min(_velocity.y,0.0f);
                 _velocity += Vector2.up * jumpforce * 0.8f;
                 _velocity.x = 0f;
                 _velocity.x += faceDir * jumpforce * 1.2f;
@@ -576,19 +574,19 @@ public class LinePlayerController : MonoBehaviour, ILineMoveObj
         return validCount != 0;
     }
 
-    //private void OnDrawGizmos()
-    //{
-    //    var transExtendMin = extend.min + new Vector2(transform.position.x, transform.position.y);
-    //    var transExtendMax = extend.max + new Vector2(transform.position.x, transform.position.y);
+    private void OnDrawGizmos()
+    {
+        var transExtendMin = extend.min + new Vector2(transform.position.x, transform.position.y);
+        var transExtendMax = extend.max + new Vector2(transform.position.x, transform.position.y);
 
-    //    DrawBBox(new BBox(transExtendMin, transExtendMax), Color.green);
+        DrawBBox(new BBox(transExtendMin, transExtendMax), Color.green);
 
-    //    if(_validLines != null)
-    //        foreach(var line in _validLines)
-    //        {
-    //            DrawBBox(BBox.LineToBBox(line), Color.yellow);
-    //        }
-    //}
+        if (_validLines != null)
+            foreach (var line in _validLines)
+            {
+                DrawBBox(BBox.LineToBBox(line), Color.yellow);
+            }
+    }
 
     private void DrawBBox(BBox box, Color color)
     {

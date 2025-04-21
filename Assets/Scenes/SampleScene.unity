@@ -1023,6 +1023,12 @@ MonoBehaviour:
   maxLerpSpeed: 8
   currentPos: {x: 0, y: 0, z: 0}
   targetPos: {x: 0, y: 0, z: 0}
+  worldRect:
+    serializedVersion: 2
+    x: -8.73
+    y: -6.94
+    width: 39.8
+    height: 12.7
   depthX: 0.8
   depthY: 0.6
   deadzoneX: 3.6
