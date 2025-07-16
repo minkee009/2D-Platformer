@@ -66,6 +66,19 @@ public class CameraController : MonoBehaviour
         if (Mathf.Abs(targetPos.y - Player.position.y) > depthY)
             targetPos.y = Player.position.y > targetPos.y ? Player.position.y - depthY : Player.position.y + depthY;
 
+
+        targetPos.x = Mathf.Clamp(
+            targetPos.x,
+            worldRect.xMin + m_clampWidth,
+            worldRect.xMax - m_clampWidth
+        );
+
+        targetPos.y = Mathf.Clamp(
+            targetPos.y,
+            worldRect.yMin + m_clampHeight - yOffset,
+            worldRect.yMax - m_clampHeight - yOffset
+        );
+
         var setXLerpSpeed = minLerpSpeed + ((maxLerpSpeed - minLerpSpeed) * Mathf.Clamp01(Mathf.Max(0f, Mathf.Abs(Player.position.x - currentPos.x) - deadzoneX) / DEADZONE_THRESHOLD));
         var setYLerpSpeed = minLerpSpeed + ((maxLerpSpeed - minLerpSpeed) * Mathf.Clamp01(Mathf.Max(0f, Mathf.Abs(Player.position.y - currentPos.y) - deadzoneY) / DEADZONE_THRESHOLD));
 
