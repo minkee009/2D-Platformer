@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using UnityEditor;
 using UnityEngine;
 
@@ -14,13 +15,18 @@ public class LineGround : MonoBehaviour
     [HideInInspector]
     public LineSegments lines = new LineSegments();
 
+    public IReadOnlyList<Line> walls => _walls;
+    public IReadOnlyList<Line> footholds => _footholds;
+
     [SerializeField]
     [HideInInspector]
     public BBox extend;
 
     private LineRenderer _lineRenderer;
+    private List<Line> _walls;
+    private List<Line> _footholds;
 
-    public IList<Line> CreateGround()
+    public IReadOnlyList<Line> CreateGround()
     {
         if (points == null || points.Count == 0)
             return null;
@@ -39,6 +45,23 @@ public class LineGround : MonoBehaviour
             aabbMaxY = aabbMaxY < p.y ? p.y : aabbMaxY;
 
             lines.AddPoint(p);
+        }
+
+        _walls = new List<Line>();
+        _footholds = new List<Line>();
+
+        foreach (var line in lines.segment)
+        {
+            var frontNormal = line.frontNormal;
+
+            if(frontNormal != Vector2.zero)
+            {
+                if (frontNormal.y > 0f)
+                    _footholds.Add(line);
+                else 
+                    _walls.Add(line);
+                continue;
+            }
         }
 
         extend = new BBox(new Vector2(aabbMinX, aabbMinY), new Vector2(aabbMaxX, aabbMaxY));

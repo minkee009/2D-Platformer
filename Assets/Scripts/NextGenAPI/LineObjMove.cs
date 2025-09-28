@@ -26,6 +26,7 @@ public class LineObjMove : MonoBehaviour
     private float _hInput;
     private float _lastHInput;
     private bool _jumpInput;
+    private bool _isGrounded;
 
     private void Awake()
     {
@@ -79,11 +80,13 @@ public class LineObjMove : MonoBehaviour
         var targetSpeed = speed + (Mathf.Abs(gravityForceVec.x) * (Mathf.Sign(_velocity.x) == Mathf.Sign(gravityForceVec.x) ? 1f : -0.55f));
         targetSpeed = Math.Clamp(targetSpeed, speed * 0.5f, speed * 1.5f);
 
+        //가속 적용
         if (_hInput != 0f && _velocity.magnitude < targetSpeed || MathF.Sign(_velocity.x) != _hInput)
         {
             _velocity += Vector2.right * (_hInput * accel) * deltaTime;
         }
-           
+        
+        //마찰 적용
         if (_velocity.sqrMagnitude > 0f)
         {
             if (_hInput == 0f)

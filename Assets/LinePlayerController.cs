@@ -36,7 +36,7 @@ public class LinePlayerController : MonoBehaviour, ILineMoveObj
 
     private bool _lastMoveHitLine;
 
-    private IList<Line> _collisionLInes;
+    private IReadOnlyList<Line> _collisionLInes;
     private Line[] _validLines = new Line[MAX_SEARCHCOUNT];
     private int _validLineCount;
 
@@ -437,7 +437,7 @@ public class LinePlayerController : MonoBehaviour, ILineMoveObj
         isGrounded = false;
     }
 
-    public void SetCollisionLines(IList<Line> collisionLines)
+    public void SetCollisionLines(IReadOnlyList<Line> collisionLines)
     {
         _collisionLInes = collisionLines;
     }

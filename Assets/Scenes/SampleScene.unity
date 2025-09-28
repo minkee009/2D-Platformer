@@ -1379,7 +1379,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6cb0a551f8e7a914e87a6c86bfc6ce4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LineObjMove
-  CurrentGround: {fileID: 330228007}
+  currentGround: {fileID: 330228007}
+  spriteRenderer: {fileID: 1876448668}
   speed: 2.5
   gravity: 20
   jumpforce: 7.5
@@ -2003,9 +2004,9 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_Sprite: {fileID: -9095717837082945937, guid: 207ee8102dd4143d288186ef0be518ee, type: 3}
-  m_Color: {r: 0.25, g: 0.7862158, b: 1, a: 1}
+  m_SortingOrder: 1
+  m_Sprite: {fileID: 21300000, guid: cf6c767f39776aa4f9f4e9c5db307515, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -2023,9 +2024,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1876448666}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.625, z: 0}
+  m_LocalScale: {x: 1.79, y: 1.79, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1052971029}

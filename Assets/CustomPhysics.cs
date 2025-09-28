@@ -8,6 +8,7 @@ public struct CustomRayCastHit2D
     public Vector2 normal;
     public float distance;
     public Vector2 hitPoint;
+    public float u;
 }
 
 public static class CustomPhysics
@@ -32,6 +33,7 @@ public static class CustomPhysics
             hitInfo.distance = t * dist;
             hitInfo.hitPoint = new Vector2(position.x + t *r.x, position.y + t*r.y);
             hitInfo.normal = new Vector2(-s.y, s.x).normalized * Mathf.Sign(Vector2.Dot(hitInfo.normal, dir));
+            hitInfo.u = u;
             return true;
         }
 
@@ -64,6 +66,8 @@ public struct Line
 {
     public bool hasFrontNormal { get => frontNormal != Vector2.zero; }
 
+    public int index;
+
     public Vector2 frontNormal;
 
     public Vector2 start, end;
@@ -76,15 +80,17 @@ public struct Line
         return Vector2.Lerp(start, end, dist / max);
     }
 
-    public Line(Vector2 start, Vector2 end)
+    public Line(Vector2 start, Vector2 end, int index = -1)
     {
+        this.index = index;
         this.start = start;
         this.end = end;
         frontNormal = Vector2.zero;
     }
 
-    public Line(Vector2 start, Vector2 end, Vector2 frontNormal)
+    public Line(Vector2 start, Vector2 end, Vector2 frontNormal, int index = -1)
     {
+        this.index = index;
         this.start = start;
         this.end = end;
         this.frontNormal = frontNormal;
@@ -118,7 +124,7 @@ public struct BBox
 [Serializable]
 public class LineSegments
 {
-    public IList<Line> segment;
+    public IReadOnlyList<Line> segment;
     private List<Vector2> _points;
     private List<Line> _segment;
 
@@ -141,6 +147,7 @@ public class LineSegments
             Vector2 potentialNormal = new Vector2(-lineVector.y, lineVector.x).normalized;
 
             line.frontNormal = potentialNormal;
+            line.index = _segment.Count;
 
             _segment.Add(line);
         }
