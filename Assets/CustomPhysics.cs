@@ -70,6 +70,12 @@ public struct Line
 
     public Vector2 ToVector { get => end - start; }
 
+    public Vector2 CalcPosFromDistance(float dist)
+    {
+        float max = ToVector.magnitude;
+        return Vector2.Lerp(start, end, dist / max);
+    }
+
     public Line(Vector2 start, Vector2 end)
     {
         this.start = start;
@@ -131,10 +137,10 @@ public class LineSegments
         {
             var line = new Line(_points[_points.Count - 1], point);
 
-            if (CustomPhysics.Cross2D(line.ToVector.normalized, Vector2.up) == 0)
-                line.frontNormal = line.ToVector.y > 0 ? Vector2.left : Vector2.right;
-            else
-                line.frontNormal = new Vector2(-line.ToVector.y, line.ToVector.x);
+            Vector2 lineVector = line.ToVector;
+            Vector2 potentialNormal = new Vector2(-lineVector.y, lineVector.x).normalized;
+
+            line.frontNormal = potentialNormal;
 
             _segment.Add(line);
         }

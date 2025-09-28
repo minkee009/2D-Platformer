@@ -1,0 +1,9 @@
+/.vs
+/Library
+/Logs
+/obj
+/Temp
+2D-Platformer.sln
+Assembly-CSharp-Editor.csproj
+Assembly-CSharp.csproj
+.vsconfig
