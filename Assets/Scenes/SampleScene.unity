@@ -477,8 +477,8 @@ MonoBehaviour:
   ShowDebugGroundBox: 0
   ShowDebugGroundLine: 1
   points:
-  - {x: -45, y: -20}
-  - {x: 45, y: -20}
+  - {x: -45, y: -21}
+  - {x: 45, y: -21}
   extend:
     min: {x: 3.543, y: -3.521}
     max: {x: 4.941, y: -3}
