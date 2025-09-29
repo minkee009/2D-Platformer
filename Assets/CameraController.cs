@@ -29,6 +29,9 @@ public class CameraController : MonoBehaviour
     float m_clampWidth;
     float m_clampHeight;
     const float DEADZONE_THRESHOLD = 2f;
+#if UNITY_EDITOR
+    public bool showDebugDraw = true;
+#endif
 
     // Start is called before the first frame update
     void Start()
@@ -92,8 +95,12 @@ public class CameraController : MonoBehaviour
         transform.position = currentPos + Vector3.up * yOffset + Vector3.forward * -10f;
     }
 
+#if UNITY_EDITOR
     private void OnDrawGizmos()
     {
+        if (!showDebugDraw)
+            return;
+
         //Current View
         Gizmos.color = new Color(1, 0.5f, 0, 1);
         Gizmos.DrawLine(transform.position + new Vector3 { x = depthX, y = (-yOffset + depthY), z = 10 }, transform.position + new Vector3 { x = depthX, y = (-yOffset - depthY), z = 10 });
@@ -120,4 +127,5 @@ public class CameraController : MonoBehaviour
         Gizmos.color = Color.red;
         Gizmos.DrawWireCube(worldRect.center, worldRect.size);
     }
+#endif
 }

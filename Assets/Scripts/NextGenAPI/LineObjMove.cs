@@ -17,7 +17,6 @@ public class LineObjMove : MonoBehaviour
     private int _currentGroundID = -1;
     private Vector2 _internalPos;
     private Vector2 _lastFixedPos;
-    private Vector2 _lastInternalPos;
     private float _distance;
     private Vector2 _velocity;
     private int _segIDX;
@@ -40,7 +39,6 @@ public class LineObjMove : MonoBehaviour
     {
         FoundNewGround();
         _internalPos = transform.position;
-        _lastInternalPos = _internalPos;
     }
 
     void FoundNewGround()
@@ -122,7 +120,9 @@ public class LineObjMove : MonoBehaviour
         if(line.start.x <= pos.x && line.end.x >= pos.x)
         {
             Debug.DrawLine(line.start, line.end, Color.green);
-            Debug.DrawLine(pos, line.CalcPosFromDistance(dist), Color.yellow);
+            var projectPoint = line.CalcPosFromDistance(dist);
+            if(projectPoint.y > -20)
+                Debug.DrawLine(pos, line.CalcPosFromDistance(dist), Color.yellow);
         }
     }
 
@@ -155,7 +155,15 @@ public class LineObjMove : MonoBehaviour
 
     void FixedUpdate()
     {
-
+        //∏  ¿Ã≈ªΩ√ √ ±‚»≠
+        if(_internalPos.y < -20.0f)
+        {
+            _internalPos = new Vector2(-4.46f, 0.09f);
+            _velocity = Vector2.zero;
+            _currentGroundID = -1;
+            _isGrounded = false;
+            FoundNewGround();
+        }
 
         if (_hInput != 0.0f && _lastHInput != _hInput)
         {
@@ -164,7 +172,6 @@ public class LineObjMove : MonoBehaviour
 
         var deltaTime = Time.fixedDeltaTime;
         _lastFixedPos = _internalPos;
-        _lastInternalPos = _internalPos;
 
         var groundSeg = _currentGroundID != -1 && LineGround.LineGroundMap.ContainsKey(_currentGroundID) ? LineGround.LineGroundMap[_currentGroundID].lines : null;
         if(groundSeg == null || groundSeg.Count == 0)
@@ -393,35 +400,32 @@ public class LineObjMove : MonoBehaviour
             }
         }
 
+        BelowGround(currentPos, groundSeg.segment[_segIDX], out float currentBelowY, out float currentDist);
+        BelowGround(nextPos, groundSeg.segment[_segIDX], out float nextBelowY, out float nextDist);
 
         //∂• ∞ÀªÁ
-        if (_velocity.y <= 0.0f)
+        if (currentPos.y >= currentBelowY && nextPos.y <= nextBelowY)
         {
-            BelowGround(nextPos, groundSeg.segment[_segIDX], out float belowY, out float dist);
-            if (nextPos.y <= belowY)
+            _isGrounded = true;
+            _distance = nextDist;
+
+            //∞ÊªÁø°º≠ πÃ≤Ù∑Ø¡¸
+            var groundNormal = groundSeg.segment[_segIDX].frontNormal;
+            var crossNormal = new Vector2(-groundNormal.y, groundNormal.x);
+            var projectVel = Vector2.Dot(Vector2.down * -_velocity.y, crossNormal) * crossNormal;
+            if (_hInput == 0f)
             {
-                _isGrounded = true;
-                _distance = dist;
-
-                //∞ÊªÁø°º≠ πÃ≤Ù∑Ø¡¸
-                var groundNormal = groundSeg.segment[_segIDX].frontNormal;
-                var crossNormal = new Vector2(-groundNormal.y, groundNormal.x);
-                var projectVel = Vector2.Dot(Vector2.down * -_velocity.y, crossNormal) * crossNormal;
-                if (_hInput == 0f)
-                {
-                    _velocity.x += projectVel.x;
-                    _distance += projectVel.x * deltaTime;
-                }
-
-                Debug.Log(dist);
-                Debug.DrawRay(groundSeg.segment[_segIDX].CalcPosFromDistance(dist), groundSeg.segment[_segIDX].frontNormal, Color.blueViolet, 0.5f);
-
-                CalcDistInSegs(groundSeg);
-                _internalPos = groundSeg.segment[_segIDX].CalcPosFromDistance(_distance);
-
-                _velocity.y = 0f;
-                return;
+                projectVel.x = Mathf.Min(Mathf.Abs(projectVel.x), speed * 1.5f) * Mathf.Sign(projectVel.x);
+                _velocity.x += projectVel.x;
+                _distance += projectVel.x * deltaTime;
             }
+            Debug.DrawRay(groundSeg.segment[_segIDX].CalcPosFromDistance(nextDist), groundSeg.segment[_segIDX].frontNormal, Color.blueViolet, 0.5f);
+
+            CalcDistInSegs(groundSeg);
+            _internalPos = groundSeg.segment[_segIDX].CalcPosFromDistance(_distance);
+
+            _velocity.y = 0f;
+            return;
         }
 
         _internalPos = nextPos;
