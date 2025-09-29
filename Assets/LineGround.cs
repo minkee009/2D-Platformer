@@ -5,6 +5,8 @@ using UnityEngine;
 
 public class LineGround : MonoBehaviour
 {
+    public static Dictionary<int, LineGround> LineGroundMap = new Dictionary<int, LineGround>();
+
     public bool ShowDebugGroundBox = false;
     public bool ShowDebugGroundLine = true;
 
@@ -66,6 +68,11 @@ public class LineGround : MonoBehaviour
 
         extend = new BBox(new Vector2(aabbMinX, aabbMinY), new Vector2(aabbMaxX, aabbMaxY));
 
+        if (LineGroundMap.ContainsKey(GetInstanceID()))
+            LineGroundMap.Remove(GetInstanceID());
+
+        LineGroundMap.Add(GetInstanceID(), this);
+
         return lines.segment;
     }
 
@@ -84,6 +91,8 @@ public class LineGround : MonoBehaviour
             }
             _lineRenderer.enabled = ShowDebugGroundLine;
         }
+
+        CreateGround();
     }
 
     private void Update()

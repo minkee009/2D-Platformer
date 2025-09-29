@@ -77,7 +77,7 @@ public struct Line
     public Vector2 CalcPosFromDistance(float dist)
     {
         float max = ToVector.magnitude;
-        return Vector2.Lerp(start, end, dist / max);
+        return start + ToVector * (dist / max);
     }
 
     public Line(Vector2 start, Vector2 end, int index = -1)
