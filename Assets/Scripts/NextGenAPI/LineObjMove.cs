@@ -27,6 +27,9 @@ public class LineObjMove : MonoBehaviour
     private bool _jumpHoldInput;
     private bool _isGrounded;
 
+    //=== 디버그 용 ===//
+    private bool _debugFlag1;
+
     private void Awake()
     {
         FixedInterpolator.CreateInstance();
@@ -129,7 +132,7 @@ public class LineObjMove : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // 입력
+        // 디버그용
         if (Input.GetKeyDown(KeyCode.F))
         {
             _internalPos = new Vector2(_internalPos.x, _internalPos.y + 5.0f);
@@ -138,7 +141,13 @@ public class LineObjMove : MonoBehaviour
             _isGrounded = false;
             FoundNewGround();
         }
+        if (Input.GetKeyDown(KeyCode.G))
+        {
+            _debugFlag1 = !_debugFlag1;
+            Debug.Log($"[LineObjMove] debugFlag1 : {_debugFlag1}");
+        }
 
+        // 입력
         _jumpHoldInput = Input.GetKey(KeyCode.LeftAlt) || (Gamepad.current?.buttonSouth.isPressed ?? false);
 
         _hInput = (Input.GetKey(KeyCode.RightArrow) ? 1f : 0f) + (Input.GetKey(KeyCode.LeftArrow) ? -1f : 0f);
@@ -291,7 +300,7 @@ public class LineObjMove : MonoBehaviour
                 var gravitySlideForce = Vector2.Dot(Vector2.down * gravity * 5f, projectPlaneNormal);
                 gravitySlideForce = (projectPlaneNormal * gravitySlideForce).x * deltaTime;
 
-                _velocity.x = _hInput * speed + gravitySlideForce;
+                _velocity.x = _hInput * speed + (Mathf.Sign(gravitySlideForce) != _hInput ? (Mathf.Min(Mathf.Abs(gravitySlideForce),speed * 0.8f) * Mathf.Sign(gravitySlideForce)) : gravitySlideForce);
             }
 
             _isGrounded = false;
@@ -313,7 +322,7 @@ public class LineObjMove : MonoBehaviour
         {
             _velocity.x += _hInput * accel_air * deltaTime;
         }
-        if (_velocity.y > -speed * 8f)
+        if (_velocity.y > -gravity)
         {
             _velocity += Vector2.down * gravity * deltaTime;
         }
